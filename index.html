@@ -2,61 +2,57 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Amor Eterno</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <title>Gatis Love</title>
     <style>
-        body { background-color: pink; font-family: Arial, sans-serif; text-align: center; }
-        h1 { color: red; }
-        .button { background-color: black; color: white; padding: 10px 20px; border: none; font-size: 16px; cursor: pointer; }
-        .button:hover { background-color: darkred; }
+        /* Agrega tus estilos aquí */
     </style>
 </head>
 <body>
-    <h1>Querido Señor Gatis Love</h1>
+    <h2>Querido Señor Gatis Love,</h2>
     <p>Introduzca la contraseña para ingresar a la página:</p>
-    <input type="password" id="contraseña" placeholder="Contraseña">
-    <button id="ingresar" class="button">Ingresar</button>
-
-    <div id="mensaje" style="display: none; color: red; font-size: 18px; margin-top: 20px;"></div>
-
-    <div id="opciones" style="display: none;">
-        <h2>Su señora novia quiere decirle que lo ama mucho y le pregunta si quiere casarse mañana</h2>
-        <button id="si_hoy" class="button">SIIII, HOY MISMO</button>
-        <button id="si_despues" class="button" style="background-color: gray;">Si pero en más tiempo</button>
-    </div>
-
-    <div id="celebracion" style="display: none;">
-        <h2 style="color: red;">¡Felicidades por su matrimonio!</h2>
-        <img id="imagen_boda" src="" alt="Gatos casándose">
-    </div>
+    <input type="password" id="password">
+    <button onclick="verificarContrasena()">Ingresar</button>
+    <div id="mensaje"></div>
+    <div id="imagen"></div>
 
     <script>
-        const socket = io();
+        function verificarContrasena() {
+            const password = document.getElementById("password").value;
+            fetch("/verificar_contraseña", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ contraseña: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarBoda();
+                } else {
+                    document.getElementById("mensaje").innerText = data.error;
+                }
+            });
+        }
 
-        document.getElementById("ingresar").onclick = () => {
-            const contraseña = document.getElementById("contraseña").value;
-            socket.emit("verificar_contraseña", { contraseña: contraseña });
-        };
-
-        socket.on("mensaje_romantico", (data) => {
-            if (data.success) {
-                document.getElementById("mensaje").style.display = "none";
-                document.getElementById("opciones").style.display = "block";
-            } else {
-                document.getElementById("mensaje").textContent = data.error;
-                document.getElementById("mensaje").style.display = "block";
-            }
-        });
-
-        document.getElementById("si_hoy").onclick = () => {
-            socket.emit("mostrar_boda");
-        };
-
-        socket.on("mostrar_boda", (data) => {
-            document.getElementById("opciones").style.display = "none";
-            document.getElementById("celebracion").style.display = "block";
-            document.getElementById("imagen_boda").src = "data:image/jpeg;base64," + data.imagen;
-        });
+        function mostrarBoda() {
+            fetch("/mostrar_boda", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("mensaje").innerText = data.mensaje;
+                if (data.imagen) {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = `data:image/jpeg;base64,${data.imagen}`;
+                    document.getElementById("imagen").appendChild(imgElement);
+                }
+            });
+        }
     </script>
 </body>
 </html>
+
